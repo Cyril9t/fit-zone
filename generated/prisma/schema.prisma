@@ -1,0 +1,98 @@
+model MembershipCard {
+  id        String   @id @default(uuid())
+  accessId  String   @unique
+  userId    String   @unique
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  userId    String
+  planId    String
+  amount    Int
+  action    String
+  status    String
+  reference String   @unique
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  plan Plan @relation(fields: [planId], references: [id])
+}
+
+model Plan {
+  id            String         @id @default(uuid())
+  name          String
+  price         Int
+  duration      Int
+  benefits      String[]
+  subscriptions Subscription[]
+  rank          Int
+  payments      Payment[]
+}
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Subscription {
+  id        String   @id @default(uuid())
+  userId    String
+  planId    String
+  startDate DateTime
+  endDate   DateTime
+  status    String
+
+  user User @relation(fields: [userId], references: [id])
+  plan Plan @relation(fields: [planId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  password     String
+  name         String
+  role         Role      @default(USER)
+  otpExpiresAt DateTime?
+  isVerified   Boolean   @default(false)
+
+  profile        Profile?
+  subscriptions  Subscription[]
+  payments       Payment[]
+  membershipCard MembershipCard?
+}
+
+model Verification {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  password     String
+  otp          String
+  otpExpiresAt DateTime
+  createdAt    DateTime @default(now())
+}
+
+model Profile {
+  id           String @id @default(uuid())
+  phone_number String
+  country      String
+  state        String
+  userId       String @unique
+  user         User   @relation(fields: [userId], references: [id])
+}
